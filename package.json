@@ -1,0 +1,19 @@
+{
+  "name": "typeorm-i18n",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "class-transformer": "^0.1.10",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.2.15"
+  },
+  "devDependencies": {
+    "@types/node": "^11.11.3"
+  }
+}
