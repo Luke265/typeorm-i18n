@@ -8,4 +8,6 @@ export interface I18nValue<T, K extends I18nEntity = I18nEntity> {
 
     set(locale: string, value: T): void;
 
+    toPlain(): { [key: string]: any };
+
 }

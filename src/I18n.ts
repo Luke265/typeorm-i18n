@@ -28,10 +28,16 @@ export function getOrCreateEntityI18nClass(entityClass: Function) {
         Object.defineProperty(i18nClass, 'name', { value: entityClass.name + 'I18n' });
 
         // add relation decorations
-        Reflect.decorate([OneToMany(() => i18nClass, 'entity', {
-            cascade: ["insert", "update", "remove"]
-        }) as PropertyDecorator, Exclude() as PropertyDecorator], entityClass.prototype, 'translations');
-        Reflect.decorate([ManyToOne(() => entityClass) as PropertyDecorator], i18nClass.prototype, 'entity');
+        Reflect.decorate([
+            OneToMany(() => i18nClass, 'entity', {
+                cascade: ["insert", "update", "remove"]
+            }) as PropertyDecorator,
+            Exclude() as PropertyDecorator
+        ], entityClass.prototype, 'translations');
+        Reflect.decorate([
+            Exclude() as PropertyDecorator,
+            ManyToOne(() => entityClass) as PropertyDecorator
+        ], i18nClass.prototype, 'entity');
 
         // add entity decorations
         i18nClass = Reflect.decorate([Entity() as ClassDecorator], i18nClass);

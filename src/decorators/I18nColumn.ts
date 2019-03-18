@@ -10,6 +10,7 @@ import { ColumnWithLengthOptions } from "typeorm/decorator/options/ColumnWithLen
 import { SpatialColumnOptions } from "typeorm/decorator/options/SpatialColumnOptions";
 import { getOrCreateEntityI18nClass } from "../I18n";
 import { I18nValueImpl } from "../I18nValueImpl";
+import { Transform } from "class-transformer";
 
 /**
  * Column decorator is used to mark a specific class property as a table column. Only properties decorated with this
@@ -86,6 +87,7 @@ export function I18nColumn(typeOrOptions?: ((type?: any) => Function) | ColumnTy
         const entityClass = target.constructor;
         const i18nClass = getOrCreateEntityI18nClass(entityClass);
         Reflect.decorate([Column(typeOrOptions as any, options) as PropertyDecorator], i18nClass.prototype, propertyName);
+        Reflect.decorate([Transform((value) => value.toPlain(), {toPlainOnly: true}) as PropertyDecorator], entityClass.prototype, propertyName);
         Object.defineProperty(entityClass.prototype, propertyName, {
             enumerable: true,
             get: function () {

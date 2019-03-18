@@ -4,7 +4,7 @@ import { I18nValue } from "./I18nValue";
 export class I18nValueImpl<T, K extends I18nEntity = I18nEntity> implements I18nValue<T, K> {
 
     constructor(private __entity: any, private __TranslationClass: { new(...args: any[]): I18nEntity }, private __key: string | number | symbol) {
-        
+
     }
 
     getAll(): K[] {
@@ -30,6 +30,17 @@ export class I18nValueImpl<T, K extends I18nEntity = I18nEntity> implements I18n
             translations.push(translation);
         }
         translation[this.__key] = value;
+    }
+
+    toPlain() {
+        const map: { [locale: string]: string } = {};
+        const translations = this.__entity.translations;
+        if (translations) {
+            for (const translation of translations) {
+                map[translation.locale] = translation[this.__key];
+            }
+        }
+        return map;
     }
 
 }
