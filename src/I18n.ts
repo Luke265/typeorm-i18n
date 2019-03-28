@@ -52,5 +52,5 @@ function getBaseI18nEntityFor(classz: Function) {
     if (proto === Object || proto.isPrototypeOf(entity)) {
         return entity;
     }
-    return getOrCreateEntityI18nClass(proto);
+    return LOCALIZED_ENTITIES.get(classz) || entity;
 }

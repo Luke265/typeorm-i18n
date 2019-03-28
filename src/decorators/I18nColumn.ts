@@ -9,7 +9,7 @@ import { ColumnWithWidthOptions } from "typeorm/decorator/options/ColumnWithWidt
 import { ColumnWithLengthOptions } from "typeorm/decorator/options/ColumnWithLengthOptions";
 import { SpatialColumnOptions } from "typeorm/decorator/options/SpatialColumnOptions";
 import { getOrCreateEntityI18nClass } from "../I18n";
-import { I18nValueImpl } from "../I18nValueImpl";
+import { I18nValue } from "../I18nValue";
 import { Transform } from "class-transformer";
 
 /**
@@ -87,11 +87,11 @@ export function I18nColumn(typeOrOptions?: ((type?: any) => Function) | ColumnTy
         const entityClass = target.constructor;
         const i18nClass = getOrCreateEntityI18nClass(entityClass);
         Reflect.decorate([Column(typeOrOptions as any, options) as PropertyDecorator], i18nClass.prototype, propertyName);
-        Reflect.decorate([Transform((value) => value.toPlain(), {toPlainOnly: true}) as PropertyDecorator], entityClass.prototype, propertyName);
+        Reflect.decorate([Transform((value) => value.toPlain()) as PropertyDecorator], entityClass.prototype, propertyName);
         Object.defineProperty(entityClass.prototype, propertyName, {
             enumerable: true,
             get: function () {
-                const value = new I18nValueImpl<any, any>(this, i18nClass, propertyName);
+                const value = new I18nValue<any, any>(this, i18nClass, propertyName);
                 // after first "get" change this getter to normal value (optional)
                 Object.defineProperty(this, propertyName, {
                     value
