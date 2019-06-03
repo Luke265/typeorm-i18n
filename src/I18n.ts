@@ -1,17 +1,17 @@
 import { DefaultI18nEntity } from "./DefaultI18nEntity";
 import { I18nEntity } from "./I18nEntity";
 import { OneToMany, ManyToOne, Entity } from "typeorm";
-import { Exclude } from 'class-transformer';
+import { Translated } from "./Translation";
 
-let baseEntity: { new(...args: any[]): I18nEntity } = DefaultI18nEntity;
+let baseEntity: { new(...args: any[]): I18nEntity<Translated<any>> } = DefaultI18nEntity;
 
-export const LOCALIZED_ENTITIES: Map<Function, { new(...args: any[]): I18nEntity }> = new Map();
+export const LOCALIZED_ENTITIES: Map<Function, { new(...args: any[]): I18nEntity<Translated<any>> }> = new Map();
 
 export function getBaseI18nEntity() {
     return baseEntity;
 }
 
-export function setBaseI18nEntity(entity: { new(...args: any[]): I18nEntity }) {
+export function setBaseI18nEntity<T extends I18nEntity<Translated<any>>>(entity: { new(...args: any[]): T }) {
     baseEntity = entity;
 }
 
@@ -25,17 +25,17 @@ export function getOrCreateEntityI18nClass(entityClass: Function) {
         i18nClass = class extends getBaseI18nEntityFor(entityClass) { };
 
         // set class name
+        // TODO: custom naming strategy
         Object.defineProperty(i18nClass, 'name', { value: entityClass.name + 'I18n' });
 
         // add relation decorations
+        // TODO: Proxy decorators
         Reflect.decorate([
             OneToMany(() => i18nClass, 'entity', {
                 cascade: ["insert", "update", "remove"]
             }) as PropertyDecorator,
-            Exclude() as PropertyDecorator
         ], entityClass.prototype, 'translations');
         Reflect.decorate([
-            Exclude() as PropertyDecorator,
             ManyToOne(() => entityClass) as PropertyDecorator
         ], i18nClass.prototype, 'entity');
 

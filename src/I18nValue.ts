@@ -1,49 +1,71 @@
+import { Translated } from "./Translation";
 import { I18nEntity } from "./I18nEntity";
 
-export class I18nValue<T, K extends I18nEntity = I18nEntity> {
-    
-    constructor(private __entity: any, private __TranslationClass: { new(...args: any[]): I18nEntity }, private __key: string | number | symbol) {
+export class I18nValue<T, K extends Translated<V> = any, V extends I18nEntity<K> = I18nEntity<K>> {
 
+    constructor(
+        private readonly __entity: K,
+        private readonly __TranslationClass: { new(...args: any[]): V },
+        private readonly __key: keyof V
+    ) {
     }
 
-    getAll(): K[] {
-        return this.__entity.translations;
+    get size(): number {
+        return this.__entity.translations.length;
     }
 
-    get(locale?: string): T | null {
-        const translations = this.__entity.translations;
-        if (translations) {
-            if (locale) {
-                const translation = translations.find((l: I18nEntity) => l.locale === locale);
-                return translation && translation[this.__key];
-            } else {
-                return translations[0] && translations[0][this.__key];
-            }
+    clear(): void {
+        this.__entity.translations = [];
+    }
+
+    delete(locale: string): boolean {
+        const idx = this.findIndex(locale);
+        if (idx !== -1) {
+            this.__entity.translations.splice(idx, 1);
+            return true;
         }
-        return null;
+        return false;
     }
 
-    set(locale: string, value: T) {
+    get(locale: string): T | undefined {
+        const idx = this.findIndex(locale);
+        if (idx === -1) {
+            return;
+        }
+        const translation = this.__entity.translations[idx];
+        return translation && translation[this.__key] as any;
+    }
+
+    has(locale: string): boolean {
+        return this.findIndex(locale) !== -1;
+    }
+
+    set(locale: string, value: T): this {
         const translations = this.__entity.translations = this.__entity.translations || [];
-        let translation = translations.find((l: I18nEntity) => l.locale === locale)
-        if (!translation) {
+        const idx = this.findIndex(locale);
+        let translation;
+        if (idx === -1) {
             translation = new this.__TranslationClass();
             translation.locale = locale;
             translation.entity = this.__entity;
             translations.push(translation);
+        } else {
+            translation = translations[idx];
         }
-        translation[this.__key] = value;
+        translation[this.__key] = value as any;
+        return this;
     }
 
-    toPlain() {
-        const map: { [locale: string]: string } = {};
-        const translations = this.__entity.translations;
+    private findIndex(locale?: string) {
+        const translations: any[] = this.__entity.translations;
         if (translations) {
-            for (const translation of translations) {
-                map[translation.locale] = translation[this.__key];
+            if (locale) {
+                return translations.findIndex((l) => l.locale === locale);
+            } else {
+                return translations.findIndex((l) => l);
             }
         }
-        return map;
+        return -1;
     }
 
 }

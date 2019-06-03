@@ -1,7 +1,8 @@
 import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { I18nEntity } from './I18nEntity';
+import { Translated } from './Translation';
 
-export class DefaultI18nEntity implements I18nEntity {
+export class DefaultI18nEntity<T extends Translated<I18nEntity<T>>> implements I18nEntity<T> {
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -14,6 +15,9 @@ export class DefaultI18nEntity implements I18nEntity {
 
     @UpdateDateColumn()
     updatedAt: string;
+
+    @Column('datetime', { nullable: true })
+    deletedAt: Date;
 
     entity: any;
 

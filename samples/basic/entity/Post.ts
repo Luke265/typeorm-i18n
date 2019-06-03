@@ -16,5 +16,5 @@ export class Post {
     
     @CreateDateColumn()
     createdAt: Date;
-    
+
 }
