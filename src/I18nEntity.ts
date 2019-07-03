@@ -6,4 +6,10 @@ export interface I18nEntity<T extends Translated<I18nEntity<T>>> {
 
     locale: string;
 
+    createdAt: Date;
+
+    updatedAt: Date;
+
+    deletedAt: Date | null;
+
 }

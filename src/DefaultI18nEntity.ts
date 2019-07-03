@@ -11,10 +11,10 @@ export class DefaultI18nEntity<T extends Translated<I18nEntity<T>>> implements I
     locale: string;
 
     @CreateDateColumn()
-    createdAt: string;
+    createdAt: Date;
 
     @UpdateDateColumn()
-    updatedAt: string;
+    updatedAt: Date;
 
     @Column('datetime', { nullable: true })
     deletedAt: Date;
