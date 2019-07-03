@@ -92,7 +92,8 @@ export function I18nColumn(typeOrOptions?: ((type?: any) => Function) | ColumnTy
                 const value = new I18nValue<any, any, any>(this, i18nClass, propertyName);
                 // after first "get" change this getter to normal value (optional)
                 Object.defineProperty(this, propertyName, {
-                    value
+                    value,
+                    enumerable: true
                 });
                 return value;
             }
