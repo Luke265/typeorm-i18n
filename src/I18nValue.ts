@@ -19,9 +19,9 @@ export class I18nValue<T, K extends Translated<V> = any, V extends I18nEntity<K>
     }
 
     delete(locale: string): boolean {
-        const idx = this.findIndex(locale);
-        if (idx !== -1) {
-            this.__entity.translations.splice(idx, 1);
+        const translation = this.__entity.translations.find((t) => t.locale === locale);
+        if (translation) {
+            translation.deletedAt = new Date();
             return true;
         }
         return false;
@@ -51,18 +51,19 @@ export class I18nValue<T, K extends Translated<V> = any, V extends I18nEntity<K>
             translations.push(translation);
         } else {
             translation = translations[idx];
+            translation.deletedAt = null;
         }
         translation[this.__key] = value as any;
         return this;
     }
 
     private findIndex(locale?: string) {
-        const translations: any[] = this.__entity.translations;
+        const translations = this.__entity.translations;
         if (translations) {
             if (locale) {
-                return translations.findIndex((l) => l.locale === locale);
+                return translations.findIndex((l) => l.locale === locale && !l.deletedAt);
             } else {
-                return translations.findIndex((l) => l);
+                return translations.findIndex((l) => l && !l.deletedAt);
             }
         }
         return -1;
