@@ -31,9 +31,7 @@ export function getOrCreateEntityI18nClass(entityClass: Function) {
         // add relation decorations
         // TODO: Proxy decorators
         Reflect.decorate([
-            OneToMany(() => i18nClass, 'entity', {
-                cascade: ["insert", "update", "remove"]
-            }) as PropertyDecorator,
+            OneToMany(() => i18nClass, 'entity') as PropertyDecorator,
         ], entityClass.prototype, 'translations');
         Reflect.decorate([
             ManyToOne(() => entityClass) as PropertyDecorator
@@ -41,6 +39,10 @@ export function getOrCreateEntityI18nClass(entityClass: Function) {
 
         // add entity decorations
         i18nClass = Reflect.decorate([Entity() as ClassDecorator], i18nClass);
+        // define static property
+        Object.defineProperty(entityClass, 'I18nEntity', {
+            value: i18nClass
+        });
         LOCALIZED_ENTITIES.set(entityClass, i18nClass);
     }
     return i18nClass;
