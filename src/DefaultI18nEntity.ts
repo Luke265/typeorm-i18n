@@ -1,8 +1,8 @@
 import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { I18nEntity } from './I18nEntity';
-import { Translated } from './Translation';
+import { I18nEntityBase } from './I18nEntityBase';
+import { Translated } from './Translated';
 
-export class DefaultI18nEntity<T extends Translated<I18nEntity<T>>> implements I18nEntity<T> {
+export class DefaultI18nEntity<T extends Translated<I18nEntityBase<T>>> implements I18nEntityBase<T>  {
 
     @PrimaryGeneratedColumn()
     id: number;

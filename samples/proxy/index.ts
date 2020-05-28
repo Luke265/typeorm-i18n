@@ -2,6 +2,7 @@ import { ConnectionOptions, createConnection, SimpleConsoleLogger } from "typeor
 import { importClassesFromDirectories } from 'typeorm/util/DirectoryExportedClassesLoader';
 import { Post } from "./entity/Post";
 import { buildI18nEntities, i18nEntityOf } from "../../src";
+import { validate } from "class-validator";
 
 const options: ConnectionOptions = {
     type: "mysql",
@@ -15,7 +16,7 @@ const options: ConnectionOptions = {
     entities: [
         // We have to load classes before we make connection to the database
         ...importClassesFromDirectories(new SimpleConsoleLogger(), [__dirname + "/entity/*"]),
-        // Builds i18n entities from collected metadata
+        // Gets i18n entities classes, which are automagically generated after entity classes are loaded
         ...buildI18nEntities()
     ]
 };
@@ -59,6 +60,11 @@ const options: ConnectionOptions = {
         }
 
         console.log(result.title.get("en"));
+
+        const translationEntity = result.title.getTranslation("en");
+        if (translationEntity) {
+            console.log(await validate(translationEntity));
+        }
     }
 
     await createNewPost();

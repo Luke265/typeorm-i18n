@@ -1,6 +1,6 @@
 export * from './I18nValue';
-export * from './decorators/I18nColumn';
-export * from './I18nEntity';
-export * from './Translation';
+export * from './I18nEntityBase';
+export * from './Translated';
+export * from './decorator';
 
-export { setBaseI18nEntity, getI18nEntities } from './I18n';
+export { buildI18nEntities, i18nEntityOf } from './I18n';

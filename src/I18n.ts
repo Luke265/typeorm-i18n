@@ -1,58 +1,99 @@
 import { DefaultI18nEntity } from "./DefaultI18nEntity";
-import { I18nEntity } from "./I18nEntity";
-import { OneToMany, ManyToOne, Entity } from "typeorm";
-import { Translated } from "./Translation";
+import { I18nEntityBase } from "./I18nEntityBase";
+import { OneToMany, ManyToOne, Entity, Column, ObjectType } from "typeorm";
+import { Translated } from "./Translated";
+import { I18nValue } from "./I18nValue";
+import { MetadataStorage, Options } from "./MetadataStorage";
 
-let baseEntity: { new(...args: any[]): I18nEntity<Translated<any>> } = DefaultI18nEntity;
-
-export const LOCALIZED_ENTITIES: Map<Function, { new(...args: any[]): I18nEntity<Translated<any>> }> = new Map();
-
-export function getBaseI18nEntity() {
-    return baseEntity;
+export type BaseEntity = { new(...args: any[]): I18nEntityBase<Translated<any>> };
+export interface BuildOptions {
+    suffix: string,
+    baseEntity: BaseEntity
 }
 
-export function setBaseI18nEntity<T extends I18nEntity<Translated<any>>>(entity: { new(...args: any[]): T }) {
-    baseEntity = entity;
+const storage = new MetadataStorage();
+const defaultBuildOptions: BuildOptions = {
+    suffix: 'I18n',
+    baseEntity: DefaultI18nEntity
 }
 
-export function getI18nEntities() {
-    return Array.from(LOCALIZED_ENTITIES.values());
+export function getMetadataStorage() {
+    return storage
 }
 
-export function getOrCreateEntityI18nClass(entityClass: Function) {
-    let i18nClass: any = LOCALIZED_ENTITIES.get(entityClass);
-    if (!i18nClass) {
-        i18nClass = class extends getBaseI18nEntityFor(entityClass) { };
+export function buildI18nEntities(buildOptions?: Partial<BuildOptions>) {
+    const boptions = {
+        ...defaultBuildOptions,
+        ...buildOptions
+    }
+    const entities = [];
+    for (const [entityClass, options] of getMetadataStorage().store) {
+        entities.push(
+            buildLocalizedEntityFor(boptions, entityClass, options)
+        );
+    }
+    return entities;
+}
 
-        // set class name
-        // TODO: custom naming strategy
-        Object.defineProperty(i18nClass, 'name', { value: entityClass.name + 'I18n' });
+export function i18nEntityOf<T extends Translated<I18nEntityBase<T>>>(entityClass: { new(...args: any[]): T }): ObjectType<I18nEntityBase<T>> {
+    return (entityClass as any).I18nEntity;
+}
 
-        // add relation decorations
-        // TODO: Proxy decorators
-        Reflect.decorate([
-            OneToMany(() => i18nClass, 'entity') as PropertyDecorator,
-        ], entityClass.prototype, 'translations');
-        Reflect.decorate([
-            ManyToOne(() => entityClass) as PropertyDecorator
-        ], i18nClass.prototype, 'entity');
+function buildLocalizedEntityFor(buildOptions: BuildOptions, entityClass: Function, options: Options) {
+    let localizedClass = class extends buildOptions.baseEntity { };
 
-        // add entity decorations
-        i18nClass = Reflect.decorate([Entity() as ClassDecorator], i18nClass);
-        // define static property
-        Object.defineProperty(entityClass, 'I18nEntity', {
-            value: i18nClass
+    // set class name
+    // TODO: custom naming strategy
+    Object.defineProperty(localizedClass, 'name', { value: entityClass.name + buildOptions.suffix });
+
+    // add relation decorations
+    // TODO: Proxy decorators
+    Reflect.decorate([
+        OneToMany(() => localizedClass, 'entity', options.oneToManyRelationOptions) as PropertyDecorator,
+    ], entityClass.prototype, 'translations');
+    Reflect.decorate([
+        ManyToOne(() => entityClass, options.manyToOneRelationOptions) as PropertyDecorator
+    ], localizedClass.prototype, 'entity');
+
+    const decorators = [
+        ...options.proxyDecorators
+    ]
+    if (options.entityOptions !== undefined) {
+        decorators.push(Entity(options.entityOptions) as ClassDecorator)
+    }
+    // add entity decorations
+    localizedClass = Reflect.decorate(decorators, localizedClass) as any;
+    // define static property
+    Object.defineProperty(entityClass, 'I18nEntity', {
+        value: localizedClass
+    });
+
+    for (const propertyName in options.properties) {
+        const {columnOptions, proxyDecorators: proxy} = options.properties[propertyName];
+        const decorators = [
+            ...proxy
+        ];
+        if (columnOptions) {
+            decorators.push(
+                Column(columnOptions.typeOrOptions as any, columnOptions.options) as PropertyDecorator
+            );
+        }
+        if (decorators.length > 0) {
+            Reflect.decorate(decorators, localizedClass.prototype, propertyName);
+        }
+        Object.defineProperty(entityClass.prototype, propertyName, {
+            enumerable: true,
+            get: function () {
+                const value = new I18nValue<any, any, any>(this, localizedClass, propertyName);
+                // after first "get" change this getter to normal value (optional)
+                Object.defineProperty(this, propertyName, {
+                    value,
+                    enumerable: true
+                });
+                return value;
+            }
         });
-        LOCALIZED_ENTITIES.set(entityClass, i18nClass);
     }
-    return i18nClass;
-}
 
-function getBaseI18nEntityFor(classz: Function) {
-    const entity = getBaseI18nEntity();
-    const proto = Object.getPrototypeOf(classz);
-    if (proto === Object || proto.isPrototypeOf(entity)) {
-        return entity;
-    }
-    return LOCALIZED_ENTITIES.get(classz) || entity;
+    return localizedClass;
 }

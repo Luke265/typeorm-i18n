@@ -1,6 +1,6 @@
 {
   "name": "typeorm-i18n",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -9,10 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.2.18"
+    "reflect-metadata": ">=0.1.0",
+    "typeorm": ">=0.2.0"
   },
   "devDependencies": {
-    "@types/node": "^12.0.12"
+    "@types/node": ">10",
+    "class-validator": "^0.12.2",
+    "mysql": "^2.18.1"
   }
 }

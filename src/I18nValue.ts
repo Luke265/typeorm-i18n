@@ -1,25 +1,32 @@
-import { Translated } from "./Translation";
-import { I18nEntity } from "./I18nEntity";
+import { Translated } from "./Translated";
+import { I18nEntityBase } from "./I18nEntityBase";
 
-export class I18nValue<T, K extends Translated<V> = any, V extends I18nEntity<K> = I18nEntity<K>> {
+export class I18nValue<T, K extends I18nEntityBase<E> = I18nEntityBase<any>, E extends Translated<K> = any> {
+
+    readonly #entity: E;
+    readonly #translationClass: { new(...args: any[]): K };
+    readonly #key: keyof K;
 
     constructor(
-        private readonly __entity: K,
-        private readonly __TranslationClass: { new(...args: any[]): V },
-        private readonly __key: keyof V
+        entity: E,
+        translationClass: { new(...args: any[]): K },
+        key: keyof K
     ) {
+        this.#entity = entity;
+        this.#translationClass = translationClass;
+        this.#key = key;
     }
 
     get size(): number {
-        return this.__entity.translations.length;
+        return this.#entity.translations.length;
     }
 
     clear(): void {
-        this.__entity.translations = [];
+        this.#entity.translations = [];
     }
 
     delete(locale: string): boolean {
-        const translation = this.__entity.translations.find((t) => t.locale === locale);
+        const translation = this.#entity.translations.find((t) => t.locale === locale);
         if (translation) {
             translation.deletedAt = new Date();
             return true;
@@ -28,37 +35,43 @@ export class I18nValue<T, K extends Translated<V> = any, V extends I18nEntity<K>
     }
 
     get(locale: string): T | undefined {
+        const translationEntity = this.getTranslation(locale);
+        if (translationEntity) {
+            return translationEntity[this.#key] as any;
+        }
+    }
+
+    getTranslation(locale: string) {
         const idx = this.findIndex(locale);
         if (idx === -1) {
             return;
         }
-        const translation = this.__entity.translations[idx];
-        return translation && translation[this.__key] as any;
+        return this.#entity.translations[idx];
     }
 
     has(locale: string): boolean {
         return this.findIndex(locale) !== -1;
     }
 
-    set(locale: string, value: T): this {
-        const translations = this.__entity.translations = this.__entity.translations || [];
+    set(locale: string, value: T): K {
+        const translations = this.#entity.translations = this.#entity.translations || [];
         const idx = this.findIndex(locale);
         let translation;
         if (idx === -1) {
-            translation = new this.__TranslationClass();
+            translation = new this.#translationClass();
             translation.locale = locale;
-            translation.entity = this.__entity;
+            translation.entity = this.#entity;
             translations.push(translation);
         } else {
             translation = translations[idx];
             translation.deletedAt = null;
         }
-        translation[this.__key] = value as any;
-        return this;
+        translation[this.#key] = value as any;
+        return translation;
     }
 
     private findIndex(locale?: string) {
-        const translations = this.__entity.translations;
+        const translations = this.#entity.translations;
         if (translations) {
             if (locale) {
                 return translations.findIndex((l) => l.locale === locale && !l.deletedAt);
