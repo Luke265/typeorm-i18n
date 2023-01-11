@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/node": ">10",
-    "class-validator": "^0.12.2",
+    "class-validator": "^0.14.0",
     "mysql": "^2.18.1"
   }
 }
